@@ -67,6 +67,22 @@ impl List {
     }
 }
 
+// デフォルトの destructor は再帰的にノードをたどるため、
+// リストが大きいと stack overflow が起きうる
+// (Box を挟むデータ構造の destruction は末尾再帰にならない)。
+// よって自前で Drop を実装する。
+impl Drop for List {
+    fn drop(&mut self) {
+        let mut cur_link = mem::replace(&mut self.head, Link::Empty);
+        while let Link::More(mut boxed_node) = cur_link {
+            cur_link = mem::replace(&mut boxed_node.next, Link::Empty);
+            // `boxed_node`はここでスコープから消え、drop される。
+            // `boxed_node.next`は既に`Link::Empty`になっているため、
+            // 再帰的な drop も発生しない。
+        }
+    }
+}
+
 #[cfg(test)]
 mod test {
     use super::List;
