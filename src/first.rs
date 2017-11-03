@@ -17,6 +17,8 @@
 //     next: List,
 // }
 
+use std::mem;
+
 pub struct List {
     head: Link,
 }
@@ -34,5 +36,13 @@ struct Node {
 impl List {
     pub fn new() -> Self {
         List { head: Link::Empty }
+    }
+
+    pub fn push(&mut self, elem: i32) {
+        // 借用中の self の値はムーブできない。
+        // `mem::replace`を使って代わりの値をセットする事でムーブできちゃう。
+        let next = mem::replace(&mut self.head, Link::Empty);
+        let new_node = Node { elem: elem, next: next };
+        self.head = Link::More(Box::new(new_node));
     }
 }
