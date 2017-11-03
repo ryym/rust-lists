@@ -45,4 +45,24 @@ impl List {
         let new_node = Node { elem: elem, next: next };
         self.head = Link::More(Box::new(new_node));
     }
+
+    pub fn pop(&mut self) -> Option<i32> {
+        // head の値を得る。これにより、値の所有権はこのローカル変数に移る。
+        // 単に`match self.head {...}`としてしまうと、`self.head`の値を
+        // match式が借用 (borrow) する形になり、match式内で`self.head`を書き換えられない。
+        let head = mem::replace(&mut self.head, Link::Empty);
+        match head {
+            Link::Empty => None,
+            Link::More(boxed_node) => {
+                let node = *boxed_node;
+                self.head = node.next;
+                Some(node.elem)
+
+                // これはできない。
+                // next を使った時点で Box 全体の所有権がなくなる..?
+                // self.head = boxed_node.next;
+                // Some(node.elem)
+            }
+        }
+    }
 }
