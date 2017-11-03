@@ -29,6 +29,18 @@ impl<T> List<T> {
             node.elem
         })
     }
+
+    pub fn peek(&self) -> Option<&T> {
+        // map はOptionに包まれている値を消費 (ムーブ) してしまう。
+        // as_refを使えば、値を残しつつ参照を取得できる。
+        self.head.as_ref().map(|node| &node.elem)
+    }
+
+    // 変更可能な参照が必要な場合は別メソッドとして定義する。
+    pub fn peek_mut(&mut self) -> Option<&mut T> {
+        // as_mut は as_mut_ref の意っぽい。
+        self.head.as_mut().map(|node| &mut node.elem)
+    }
 }
 
 impl<T> Drop for List<T> {
@@ -64,6 +76,18 @@ mod test {
         assert_eq!(list.pop(), Some(4));
         assert_eq!(list.pop(), Some(1));
         assert_eq!(list.pop(), None);
+    }
+
+    #[test]
+    fn peek() {
+        let mut list = List::new();
+
+        list.push(1);
+        list.push(2);
+        assert_eq!(list.peek(), Some(&2));
+        assert_eq!(list.peek_mut(), Some(&mut 2));
+        assert_eq!(list.pop(), Some(2));
+        assert_eq!(list.pop(), Some(1));
     }
 }
 
