@@ -81,7 +81,9 @@ pub struct Iter<'a, T: 'a> {
 impl<T> List<T> {
     // `&self`と同じlifetimeの`Iter`を作る。
     // これにより、`Iter`の生存中は`&self`も生存している事が保証される。
-    pub fn iter<'a>(&'a self) -> Iter<'a, T> {
+    // ただし`self`のライフタイムを使う場合、記述は省略可能。
+    // pub fn iter(&'a self) -> Iter<'a, T> {
+    pub fn iter(&self) -> Iter<T> {
         Iter { next: self.head.as_ref().map(|node| &**node) }
     }
 }
