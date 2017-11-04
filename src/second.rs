@@ -98,6 +98,30 @@ impl<'a, T> Iterator for Iter<'a, T> {
     }
 }
 
+pub struct IterMut<'a, T: 'a> {
+    next: Option<&'a mut Node<T>>,
+}
+
+impl<T> List<T> {
+    pub fn iter_mut(&mut self) -> IterMut<T> {
+        IterMut { next: self.head.as_mut().map(|node| &mut **node) }
+    }
+}
+
+impl<'a, T> Iterator for IterMut<'a, T> {
+    type Item = &'a mut T;
+    fn next(&mut self) -> Option<Self::Item> {
+        // `map`は実行された`Option`値全体をムーブする。
+        // 対して`take`は中の値だけをムーブし、元の`Option`を`None`に変更する。
+        // `take`がないと借用中である`self`をムーブする事になってしまいエラーになる..?
+        // `Iter`だと問題ない理屈も理解しきれてない。`Option<&>`は`Copy`だかららしい..
+        self.next.take().map(|node| {
+            self.next = node.next.as_mut().map(|node| &mut **node);
+            &mut node.elem
+        })
+    }
+}
+
 #[cfg(test)]
 mod test {
     use super::List;
@@ -155,6 +179,18 @@ mod test {
         let mut iter = list.iter();
         assert_eq!(iter.next(), Some(&2));
         assert_eq!(iter.next(), Some(&1));
+        assert_eq!(list.peek(), Some(&2));
+    }
+
+    #[test]
+    fn iter_mut() {
+        let mut list = List::new();
+        list.push(1); list.push(2);
+        {
+            let mut iter = list.iter_mut();
+            assert_eq!(iter.next(), Some(&mut 2));
+            assert_eq!(iter.next(), Some(&mut 1));
+        }
         assert_eq!(list.peek(), Some(&2));
     }
 }
