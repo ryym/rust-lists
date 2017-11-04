@@ -82,7 +82,7 @@ impl<T> List<T> {
     // `&self`と同じlifetimeの`Iter`を作る。
     // これにより、`Iter`の生存中は`&self`も生存している事が保証される。
     pub fn iter<'a>(&'a self) -> Iter<'a, T> {
-        Iter { next: self.head.map(|node| &*node) }
+        Iter { next: self.head.as_ref().map(|node| &**node) }
     }
 }
 
@@ -90,7 +90,7 @@ impl<'a, T> Iterator for Iter<'a, T> {
     type Item = &'a T;
     fn next(&mut self) -> Option<Self::Item> {
         self.next.map(|node| {
-            self.next = node.next.map(|node| &*node);
+            self.next = node.next.as_ref().map(|node| &**node);
             &node.elem
         })
     }
