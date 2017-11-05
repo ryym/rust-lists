@@ -67,6 +67,16 @@ impl<T> List<T> {
     }
 }
 
+impl<T> Drop for List<T> {
+    // doubly-linked list なので、`Rc`に包まれた各ノードは互いの参照を持ち合う。
+    // このような相互 (循環) 参照がある場合、`Rc`は正しくメモリを解放しない
+    // (`List`を削除しても両端の要素の参照数が1つ減るだけ)。
+    // そのため手動でノードを辿って削除していく必要がある。
+    fn drop(&mut self) {
+        while self.pop_front().is_some() {}
+    }
+}
+
 #[cfg(test)]
 mod test {
     use super::List;
