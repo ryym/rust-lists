@@ -1,10 +1,10 @@
-use std::rc::Rc;
+use std::sync::Arc;
 
 pub struct List<T> {
     head: Link<T>,
 }
 
-type Link<T> = Option<Rc<Node<T>>>;
+type Link<T> = Option<Arc<Node<T>>>;
 
 struct Node<T> {
     elem: T,
@@ -23,7 +23,7 @@ impl<T> List<T> {
         // 値のコピーであり、ユーザが実装を定義できる。
         let next = self.head.clone();
         List {
-            head: Some(Rc::new(Node { elem, next })),
+            head: Some(Arc::new(Node { elem, next })),
         }
     }
 
@@ -66,7 +66,7 @@ impl<T> Drop for List<T> {
         while let Some(node) = head {
             // `node`が最後の参照だった場合 (他に参照を保持している箇所がない場合) のみ
             // `try_unwrap`が成功し、destruction する。
-            if let Ok(mut node) = Rc::try_unwrap(node) {
+            if let Ok(mut node) = Arc::try_unwrap(node) {
                 head = node.next.take();
             } else {
                 break;
