@@ -60,6 +60,21 @@ impl<'a, T> Iterator for Iter<'a, T> {
 
 // 状態変更をしない実装のため、`third::List`の`Iter`や`IterMut`は実装できない。
 
+impl<T> Drop for List<T> {
+    fn drop(&mut self) {
+        let mut head = self.head.take();
+        while let Some(node) = head {
+            // `node`が最後の参照だった場合 (他に参照を保持している箇所がない場合) のみ
+            // `try_unwrap`が成功し、destruction する。
+            if let Ok(mut node) = Rc::try_unwrap(node) {
+                head = node.next.take();
+            } else {
+                break;
+            }
+        }
+    }
+}
+
 #[cfg(test)]
 mod test {
     use super::List;
