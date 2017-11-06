@@ -1,5 +1,5 @@
 use std::rc::Rc;
-use std::cell::{RefCell, Ref};
+use std::cell::{RefCell, Ref, RefMut};
 
 // `RefCell`からは`Ref`と`RefMut`を取得でき、これらは`&`と`&mut`と同じ
 // ルールを持っている (`Ref`はいくつでも作れるが、`RefMut`は同時に1つだけ)。
@@ -115,6 +115,24 @@ impl<T> List<T> {
             Ref::map(head.borrow(), |node| &node.elem)
         })
     }
+
+    pub fn peek_front_mut(&mut self) -> Option<RefMut<T>> {
+        self.head.as_mut().map(|head| {
+            RefMut::map(head.borrow_mut(), |node| &mut node.elem)
+        })
+    }
+
+    pub fn peek_back(&self) -> Option<Ref<T>> {
+        self.tail.as_ref().map(|tail| {
+            Ref::map(tail.borrow(), |node| &node.elem)
+        })
+    }
+
+    pub fn peek_back_mut(&mut self) -> Option<RefMut<T>> {
+        self.tail.as_mut().map(|tail| {
+            RefMut::map(tail.borrow_mut(), |node| &mut node.elem)
+        })
+    }
 }
 
 impl<T> Drop for List<T> {
@@ -171,8 +189,24 @@ mod test {
 
         list.push_front(1);
         assert_eq!(&*list.peek_front().unwrap(), &1);
+        assert_eq!(&mut *list.peek_front_mut().unwrap(), &mut 1);
 
         list.push_front(2);
         assert_eq!(&*list.peek_front().unwrap(), &2);
+    }
+
+    #[test]
+    fn peek_back() {
+        let mut list = List::new();
+
+        list.push_front(1);
+        assert_eq!(&*list.peek_back().unwrap(), &1);
+        assert_eq!(&mut *list.peek_back_mut().unwrap(), &mut 1);
+
+        list.push_front(2);
+        assert_eq!(&*list.peek_back().unwrap(), &1);
+
+        list.push_back(3);
+        assert_eq!(&*list.peek_back().unwrap(), &3);
     }
 }
