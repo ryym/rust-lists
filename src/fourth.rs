@@ -145,6 +145,31 @@ impl<T> Drop for List<T> {
     }
 }
 
+pub struct IntoIter<T>(List<T>);
+
+impl<T> List<T> {
+    pub fn into_iter(self) -> IntoIter<T> {
+        IntoIter(self)
+    }
+}
+
+impl<T> Iterator for IntoIter<T> {
+    type Item = T;
+    fn next(&mut self) -> Option<T> {
+        self.0.pop_front()
+    }
+}
+
+impl<T> DoubleEndedIterator for IntoIter<T> {
+    fn next_back(&mut self) -> Option<T> {
+        self.0.pop_back()
+    }
+}
+
+// 全部を理解しきれてないけど`Iter`や`IterMut`をちゃんと実装するのは厳しいらしい。
+// 例えば`Item`を`&T`の代わりに`Ref<T>`としても、`next()`で次のノードに書き換える際に
+// 1つ前のノードの参照は消えてしまう。するとそのノードの値を`Ref`で返す事はできなくなる。
+
 #[cfg(test)]
 mod test {
     use super::List;
@@ -208,5 +233,21 @@ mod test {
 
         list.push_back(3);
         assert_eq!(&*list.peek_back().unwrap(), &3);
+    }
+
+    #[test]
+    fn into_iter() {
+        let mut list = List::new();
+        for v in 1..5 {
+            list.push_front(v);
+        }
+
+        let mut iter = list.into_iter();
+        assert_eq!(iter.next(), Some(4));
+        assert_eq!(iter.next_back(), Some(1));
+        assert_eq!(iter.next_back(), Some(2));
+        assert_eq!(iter.next(), Some(3));
+        assert_eq!(iter.next_back(), None);
+        assert_eq!(iter.next(), None);
     }
 }
