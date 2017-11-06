@@ -1,5 +1,5 @@
 use std::rc::Rc;
-use std::cell::RefCell;
+use std::cell::{RefCell, Ref};
 
 // `RefCell`からは`Ref`と`RefMut`を取得でき、これらは`&`と`&mut`と同じ
 // ルールを持っている (`Ref`はいくつでも作れるが、`RefMut`は同時に1つだけ)。
@@ -65,6 +65,26 @@ impl<T> List<T> {
             Rc::try_unwrap(old_head).ok().unwrap().into_inner().elem
         })
     }
+
+    // 可能なら`RefCell`という実装の詳細を隠し、`Option<&T>`を返したいがそれはできない。
+    // `RefCell`が行うのは、「`&T`と`&mut T`は同時に存在できない」というルールと同じ制約を
+    // `Ref`と`RefMut`に実行時に課す事であり、
+    // そのためには`&T`ではなく`Ref`の生存期間が重要になる。
+    // つまり`Ref`をここで作って`&T`だけを返す事ができてしまうと、
+    // `Ref`は関数の終了とともに消えてしまうため、
+    // 「`Ref`と`RefMut`は同時に存在できない」というルールを破らないまま
+    // `&T`が生き残ってしまう。
+    // そのため`RefCell`の値の参照が必要な場合には、
+    // あくまで`&T`ではなく`Ref`を使う必要がある。
+    // だから`Ref`から得られる参照の lifetime は`RefCell`ではなく`Ref`に紐付いている。
+    // pub fn peek_front(&self) -> Option<&T> {
+    //     self.head.as_ref().map(|head| &head.borrow().elem)
+    // }
+    pub fn peek_front(&self) -> Option<Ref<T>> {
+        self.head.as_ref().map(|head| {
+            Ref::map(head.borrow(), |node| &node.elem)
+        })
+    }
 }
 
 impl<T> Drop for List<T> {
@@ -98,5 +118,16 @@ mod test {
         assert_eq!(list.pop_front(), Some(4));
         assert_eq!(list.pop_front(), Some(1));
         assert_eq!(list.pop_front(), None);
+    }
+
+    #[test]
+    fn peek_front() {
+        let mut list = List::new();
+
+        list.push_front(1);
+        assert_eq!(&*list.peek_front().unwrap(), &1);
+
+        list.push_front(2);
+        assert_eq!(&*list.peek_front().unwrap(), &2);
     }
 }
