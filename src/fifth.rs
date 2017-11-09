@@ -1,5 +1,5 @@
 // - singly-linked queue を実装したい。
-// - Listが`head`しか持ってないと、 push や pop に O(n) かかる
+// - Listが`head`しか持ってないと、 push に O(n) かかる
 //   (毎回最後のノードまで辿らないといけない)
 // - `List`が最後のノードも持ってればいい!
 // - 所有権の問題があるため、`tail: Link<T>`とは書けない。
@@ -55,5 +55,20 @@ impl<T> List<T> {
         }
 
         self.tail = raw_tail;
+    }
+
+    pub fn pop(&mut self) -> Option<T> {
+        self.head.take().map(|node| {
+            let node = *node;
+            self.head = node.next;
+
+            if self.head.is_none() {
+                // もしこの null 化処理を忘れたら、次の push はおかしな場所にノードを
+                // 挿入することになる。しかしコンパイル時にはそれがわからない。
+                self.tail = ptr::null_mut();
+            }
+
+            node.elem
+        })
     }
 }
