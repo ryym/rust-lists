@@ -1,3 +1,5 @@
+// fifth.rs
+
 // - singly-linked queue を実装したい。
 // - Listが`head`しか持ってないと、 push に O(n) かかる
 //   (毎回最後のノードまで辿らないといけない)

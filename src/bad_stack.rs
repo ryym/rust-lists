@@ -1,4 +1,4 @@
-// http://cglab.ca/~abeinges/blah/too-many-lists/book/first-layout.html
+// first.rs
 
 // コンパイルは通るけどメモリ効率に無駄がある。
 // pub enum List {
