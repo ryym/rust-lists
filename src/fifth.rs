@@ -11,6 +11,9 @@
 //   本当は既に無効な参照を`tail`が持ち続けてしまう可能性がある。
 // - このlifetimeを適切に設定する方法がない..?
 
+// わずかに unsafe な操作を導入する事で、
+// RefCellを使う諸々の面倒さを避ける事はできている。
+
 use std::ptr;
 
 type Link<T> = Option<Box<Node<T>>>;
